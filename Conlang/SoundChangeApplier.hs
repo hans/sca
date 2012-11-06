@@ -5,13 +5,10 @@ import Data.String.Utils (replace)
 -- A string of phonemes
 type Phoneme = Char
 
--- Mapping from phoneme class label to phonemes
-type PhonemeClass = (Char, [Phoneme])
-
 -- Rule for matching a phoneme or phoneme class within a context
 data Rule =
      Rule { matchChar   :: Char,
-            replacement :: String }
+            replacement :: [Phoneme] }
 
 applyRule :: String -> Rule -> String
 applyRule (c:cs) r@(Rule l ps) | c == l     = ps ++ applyRule cs r
