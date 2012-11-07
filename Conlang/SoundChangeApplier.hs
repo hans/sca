@@ -17,10 +17,10 @@ data Rule =
                      replacement   :: [Phoneme],
                      beforeContext :: Context,
                      afterContext :: Context }
-     | PhonemeClasRule { matchChar     :: Char,
-                         replacement   :: [Phoneme],
-                         beforeContext :: [Phoneme],
-                         afterContext  :: [Phoneme] }
+     | PhonemeClassRule { matchChar     :: Char,
+                          replacement   :: [Phoneme],
+                          beforeContext :: [Phoneme],
+                          afterContext  :: [Phoneme] }
 
 -- Rule application
 
