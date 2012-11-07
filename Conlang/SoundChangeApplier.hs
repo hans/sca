@@ -14,14 +14,18 @@ type Context = String
 
 -- Rule for matching a phoneme or phoneme class within a context
 data Rule =
-       PhonemeRule { matchPhoneme  :: Phoneme,
-                     replacement   :: [Phoneme],
-                     beforeContext :: Context,
-                     afterContext :: Context }
+       PhonemeRule      { matchPhoneme  :: Phoneme,
+                          replacement   :: [Phoneme],
+                          beforeContext :: Context,
+                          afterContext  :: Context }
      | PhonemeClassRule { matchChar     :: Char,
                           replacement   :: [Phoneme],
                           beforeContext :: [Phoneme],
                           afterContext  :: [Phoneme] }
+
+instance Show Rule where
+    show (PhonemeRule m r b a)      = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
+    show (PhonemeClassRule m r b a) = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
 
 -- Rule application
 
@@ -39,6 +43,8 @@ applyRule _ "" _ = ""
 
 applyRules :: PhonemeClassMap -> String -> [Rule] -> String
 applyRules classes = foldl (applyRule classes)
+
+-- Context determination
 
 matchContext :: Context -> String -> Bool
 matchContext = (==)
