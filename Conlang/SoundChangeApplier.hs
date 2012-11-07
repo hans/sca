@@ -1,12 +1,13 @@
 module Conlang.SoundChangeApplier where
 
+import Data.Map
 import Data.String.Utils (replace)
 
 -- A string of phonemes
 type Phoneme = Char
 
--- A pair of phoneme class and corresponding phonemes
-type PhonemeClass = (Char, [Phoneme])
+-- A mapping from phoneme class to corresponding phonemes
+type PhonemeClassMap = Map Char [Phoneme]
 
 -- Matching context (combination of phonemes and phoneme classes)
 type Context = String
@@ -24,7 +25,7 @@ data Rule =
 
 -- Rule application
 
-applyRule :: [PhonemeClass] -> String -> Rule -> String
+applyRule :: PhonemeClassMap -> String -> Rule -> String
 
 applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
           | c == l     = ps ++ applyRule classes cs r
@@ -32,7 +33,7 @@ applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
 
 applyRule _ "" _ = ""
 
-applyRules :: [PhonemeClass] -> String -> [Rule] -> String
+applyRules :: PhonemeClassMap -> String -> [Rule] -> String
 applyRules classes = foldl (applyRule classes)
 
 matchContext :: Context -> String -> Bool
