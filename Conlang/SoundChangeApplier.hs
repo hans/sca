@@ -1,6 +1,6 @@
 module Conlang.SoundChangeApplier where
 
-import Data.Map
+import Data.Map hiding (foldl)
 import Data.String.Utils (replace)
 
 -- A string of phonemes
@@ -26,6 +26,10 @@ data Rule =
 -- Rule application
 
 applyRule :: PhonemeClassMap -> String -> Rule -> String
+
+applyRule classes (c:cs) r@(PhonemeClassRule l ps bc ac)
+          | c `elem` (classes ! l) = ps ++ applyRule classes cs r
+          | otherwise              = c : applyRule classes cs r
 
 applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
           | c == l     = ps ++ applyRule classes cs r
