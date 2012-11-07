@@ -32,8 +32,11 @@ instance Show Rule where
 applyRule :: PhonemeClassMap -> String -> Rule -> String
 
 applyRule classes (c:cs) r@(PhonemeClassRule l ps bc ac)
-          | c `elem` (classes ! l) = ps ++ applyRule classes cs r
-          | otherwise              = c : applyRule classes cs r
+          = let phonemes = classes ! l
+            in
+                if c `elem` phonemes
+                then ps ++ applyRule classes cs r
+                else c   : applyRule classes cs r
 
 applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
           | c == l     = ps ++ applyRule classes cs r
