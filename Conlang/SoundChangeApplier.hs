@@ -20,8 +20,8 @@ data Rule =
                           afterContext  :: Context }
      | PhonemeClassRule { matchChar     :: Char,
                           replacement   :: [Phoneme],
-                          beforeContext :: [Phoneme],
-                          afterContext  :: [Phoneme] }
+                          beforeContext :: Context,
+                          afterContext  :: Context }
 
 instance Show Rule where
     show (PhonemeRule m r b a)      = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
@@ -29,25 +29,43 @@ instance Show Rule where
 
 -- Rule application
 
+-- applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
+--           | c == l     = ps ++ applyRule classes cs r
+--           | otherwise  = c   : applyRule classes cs r
+
+-- applyRule _ "" _ = ""
+
+-- Rule application with context tracking
+
+takeLast :: Int -> [a] -> [a]
+takeLast n xs = drop ((length xs) - n) xs
+
+applyRule' :: PhonemeClassMap -> Rule -> (Context, String) -> (Context, String)
+applyRule' classes r@(PhonemeClassRule l ps bc ac) (bc', s@(c:cs))
+           | length bc' < length bc || length cs < length ac
+             = (bc' ++ [c], cs)
+           | otherwise =
+             let
+                 -- Trim before-contexts and after-contexts to match what
+                 -- is needed by the rule
+                 ac'' = take (length ac) cs
+                 bc'' = takeLast (length bc) bc'
+             in
+                 if    c `elem` (classes ! l)
+                    && matchContext ac ac''
+                    && matchContext bc bc''
+                 then (bc' ++ ps , cs)
+                 else (bc' ++ [c], cs)
+applyRule' _ _ (x, "") = (x, "")
+
 applyRule :: PhonemeClassMap -> String -> Rule -> String
-
-applyRule classes (c:cs) r@(PhonemeClassRule l ps bc ac)
-          = let phonemes = classes ! l
-            in
-                if c `elem` phonemes
-                then ps ++ applyRule classes cs r
-                else c   : applyRule classes cs r
-
-applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
-          | c == l     = ps ++ applyRule classes cs r
-          | otherwise  = c : applyRule classes cs r
-
-applyRule _ "" _ = ""
+applyRule classes s r = fst . head $ dropWhile (\x -> snd x /= "")
+                                     (iterate (applyRule' classes r) ("", s))
 
 applyRules :: PhonemeClassMap -> String -> [Rule] -> String
 applyRules classes = foldl (applyRule classes)
 
 -- Context determination
 
-matchContext :: Context -> String -> Bool
+matchContext :: Context -> Context -> Bool
 matchContext = (==)
