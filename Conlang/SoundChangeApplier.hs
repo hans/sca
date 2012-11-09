@@ -56,6 +56,11 @@ applyRule' classes r@(PhonemeClassRule l ps bc ac) (bc', s@(c:cs))
                     && matchContext bc bc''
                  then (bc' ++ ps , cs)
                  else (bc' ++ [c], cs)
+
+applyRule' _ r@(PhonemeRule l r bc ac) (bc', s@(c:cs))
+           | c == l    = (bc' ++ ps, cs)
+           | otherwise = (bc' ++ [c], cs)
+
 applyRule' _ _ (x, "") = (x, "")
 
 applyRule :: PhonemeClassMap -> String -> Rule -> String
