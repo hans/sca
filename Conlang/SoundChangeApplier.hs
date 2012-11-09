@@ -30,7 +30,7 @@ instance Show Rule where
 -- Rule application with context tracking
 
 takeLast :: Int -> [a] -> [a]
-takeLast n xs = drop ((length xs) - n) xs
+takeLast n xs = drop (length xs - n) xs
 
 -- Context-free rule match. Innermost and simplest logic goes here.
 matchRule :: PhonemeClassMap -> Rule -> Char -> Bool
@@ -46,11 +46,11 @@ matchRule _ (PhonemeRule l _ _ _) c = c == l
 -- Context-aware rule application. Delegates primary rule logic
 -- (context-free) to `matchRule` and context matching to `matchContext`.
 applyRule' :: PhonemeClassMap -> Rule -> (Context, String) -> (Context, String)
-applyRule' cs r (preceding, (c:s))
+applyRule' cs r (preceding, c : s)
            = if    matchRule cs r c
                 && matchContext cs (beforeContext r) bc
                 && matchContext cs (afterContext r) ac
-             then (preceding ++ (replacement r), s)
+             then (preceding ++ replacement r, s)
              else (preceding ++ [c], s)
              where
                 -- Trim before-contexts and after-contexts to match what
