@@ -27,6 +27,8 @@ instance Show Rule where
     show (PhonemeRule m r b a)      = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
     show (PhonemeClassRule m r b a) = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
 
+-- Read rules from strings
+
 -- Rule application with context tracking
 
 takeLast :: Int -> [a] -> [a]
@@ -69,5 +71,14 @@ applyRules classes = foldl (applyRule classes)
 
 -- Context determination
 
-matchContext :: PhonemeClassMap -> Context -> Context -> Bool
-matchContext classes = (==)
+matchContext :: PhonemeClassMap -> Context -> String -> Bool
+matchContext classes (c:cs) (d:ds)
+             -- TODO: Fix once we find a proper isUpper check
+             | c == 'V'  = member c classes
+                           && d `elem` (classes ! c)
+                           && matchContext classes cs ds
+             | otherwise = c == d
+                           && matchContext classes cs ds
+matchContext _       []     [] = True
+matchContext _       []     _  = False
+matchContext _       _      [] = False
