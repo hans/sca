@@ -32,33 +32,31 @@ instance Show Rule where
 takeLast :: Int -> [a] -> [a]
 takeLast n xs = drop ((length xs) - n) xs
 
+-- Context-free rule match. Innermost and simplest logic goes here.
+matchRule :: PhonemeClassMap -> Rule -> Char -> Bool
 
-matchRule :: PhonemeClassMap -> Rule -> Context -> Context -> Char -> Bool
+-- A phoneme class rule should match when the given char is a phoneme
+-- class label.
+matchRule classes (PhonemeClassRule l _ _ _) c = c `elem` (classes ! l)
 
-matchRule classes (PhonemeClassRule l ps bc ac) bc' ac' c
-          | length bc' < length bc || length ac' < length ac
-            = False
-          | otherwise = c `elem` (classes ! l)
-                        -- && matchContext ac ac'
-                        -- && matchContext bc bc'
+-- A phoneme rule should match when the given char is equal to the
+-- rule's match char.
+matchRule _ (PhonemeRule l _ _ _) c = c == l
 
-matchRule _ (PhonemeRule l r bc ac) bc' ac' c
-          | length bc' < length bc || length ac' < length ac
-            = False
-          | otherwise = c == l
-                        && matchContext ac ac'
-                        && matchContext bc bc'
-
+-- Context-aware rule application. Delegates primary rule logic
+-- (context-free) to `matchRule` and context matching to `matchContext`.
 applyRule' :: PhonemeClassMap -> Rule -> (Context, String) -> (Context, String)
-applyRule' classes r (preceding, (c:cs))
-           = if matchRule classes r bc ac c
-             then (preceding ++ (replacement r), cs)
-             else (preceding ++ [c], cs)
+applyRule' cs r (preceding, (c:s))
+           = if    matchRule cs r c
+                && matchContext cs (beforeContext r) bc
+                && matchContext cs (afterContext r) ac
+             then (preceding ++ (replacement r), s)
+             else (preceding ++ [c], s)
              where
                 -- Trim before-contexts and after-contexts to match what
                 -- is needed by the rule
                 bc = takeLast (length (beforeContext r)) preceding
-                ac = take (length (afterContext r)) cs
+                ac = take (length (afterContext r)) s
 
 applyRule' _ _ (x, "") = (x, "")
 
@@ -71,5 +69,5 @@ applyRules classes = foldl (applyRule classes)
 
 -- Context determination
 
-matchContext :: Context -> Context -> Bool
-matchContext = (==)
+matchContext :: PhonemeClassMap -> Context -> Context -> Bool
+matchContext classes = (==)
