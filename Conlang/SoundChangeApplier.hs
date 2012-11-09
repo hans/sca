@@ -27,39 +27,38 @@ instance Show Rule where
     show (PhonemeRule m r b a)      = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
     show (PhonemeClassRule m r b a) = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
 
--- Rule application
-
--- applyRule classes (c:cs) r@(PhonemeRule l ps _ _)
---           | c == l     = ps ++ applyRule classes cs r
---           | otherwise  = c   : applyRule classes cs r
-
--- applyRule _ "" _ = ""
-
 -- Rule application with context tracking
 
 takeLast :: Int -> [a] -> [a]
 takeLast n xs = drop ((length xs) - n) xs
 
-applyRule' :: PhonemeClassMap -> Rule -> (Context, String) -> (Context, String)
-applyRule' classes r@(PhonemeClassRule l ps bc ac) (bc', s@(c:cs))
-           | length bc' < length bc || length cs < length ac
-             = (bc' ++ [c], cs)
-           | otherwise =
-             let
-                 -- Trim before-contexts and after-contexts to match what
-                 -- is needed by the rule
-                 ac'' = take (length ac) cs
-                 bc'' = takeLast (length bc) bc'
-             in
-                 if    c `elem` (classes ! l)
-                    && matchContext ac ac''
-                    && matchContext bc bc''
-                 then (bc' ++ ps , cs)
-                 else (bc' ++ [c], cs)
 
-applyRule' _ r@(PhonemeRule l r bc ac) (bc', s@(c:cs))
-           | c == l    = (bc' ++ ps, cs)
-           | otherwise = (bc' ++ [c], cs)
+matchRule :: PhonemeClassMap -> Rule -> Context -> Context -> Char -> Bool
+
+matchRule classes (PhonemeClassRule l ps bc ac) bc' ac' c
+          | length bc' < length bc || length ac' < length ac
+            = False
+          | otherwise = c `elem` (classes ! l)
+                        -- && matchContext ac ac'
+                        -- && matchContext bc bc'
+
+matchRule _ (PhonemeRule l r bc ac) bc' ac' c
+          | length bc' < length bc || length ac' < length ac
+            = False
+          | otherwise = c == l
+                        && matchContext ac ac'
+                        && matchContext bc bc'
+
+applyRule' :: PhonemeClassMap -> Rule -> (Context, String) -> (Context, String)
+applyRule' classes r (preceding, (c:cs))
+           = if matchRule classes r bc ac c
+             then (preceding ++ (replacement r), cs)
+             else (preceding ++ [c], cs)
+             where
+                -- Trim before-contexts and after-contexts to match what
+                -- is needed by the rule
+                bc = takeLast (length (beforeContext r)) preceding
+                ac = take (length (afterContext r)) cs
 
 applyRule' _ _ (x, "") = (x, "")
 
