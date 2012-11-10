@@ -2,7 +2,10 @@ module Conlang.SoundChangeApplier where
 
 import Data.Map hiding (foldl)
 
--- A string of phonemes
+-- A single IPA char
+--
+-- TODO: Phonemes can have more than one character (palatalized,
+-- ejective, etc. modifiers)
 type Phoneme = Char
 
 -- A mapping from phoneme class to corresponding phonemes
