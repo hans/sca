@@ -27,8 +27,6 @@ instance Show Rule where
     show (PhonemeRule m r b a)      = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
     show (PhonemeClassRule m r b a) = m : " > " ++ r ++ " / " ++ b ++ "_" ++ a
 
--- Read rules from strings
-
 -- Rule application with context tracking
 
 takeLast :: Int -> [a] -> [a]
@@ -48,6 +46,7 @@ matchRule _ (PhonemeRule l _ _ _) c = c == l
 -- Context-aware rule application. Delegates primary rule logic
 -- (context-free) to `matchRule` and context matching to `matchContext`.
 applyRule' :: PhonemeClassMap -> Rule -> (Context, String) -> (Context, String)
+
 applyRule' cs r (preceding, c : s)
            = if    matchRule cs r c
                 && matchContext cs (beforeContext r) bc
@@ -60,7 +59,7 @@ applyRule' cs r (preceding, c : s)
                 bc = takeLast (length (beforeContext r)) preceding
                 ac = take (length (afterContext r)) s
 
-applyRule' _ _ (x, "") = (x, "")
+applyRule' _  _ (x, "") = (x, "")
 
 applyRule :: PhonemeClassMap -> String -> Rule -> String
 applyRule classes s r = fst . head $ dropWhile (\x -> snd x /= "")
