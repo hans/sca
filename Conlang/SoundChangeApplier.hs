@@ -1,7 +1,6 @@
 module Conlang.SoundChangeApplier where
 
 import Data.Map hiding (foldl)
-import Data.String.Utils (replace)
 
 -- A string of phonemes
 type Phoneme = Char
