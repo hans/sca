@@ -1,5 +1,6 @@
 module Conlang.SoundChangeApplier where
 
+import Data.Char (isUpper)
 import Data.Map hiding (foldl)
 
 -- A single IPA char
@@ -72,14 +73,18 @@ applyRules classes = foldl (applyRule classes)
 
 -- Context determination
 
+-- True if the given character represents a phoneme class.
+isPhonemeClass :: Char -> Bool
+isPhonemeClass = isUpper
+
 matchContext :: PhonemeClassMap -> Context -> String -> Bool
 matchContext classes (c:cs) (d:ds)
              -- TODO: Fix once we find a proper isUpper check
-             | c == 'V'  = member c classes
-                           && d `elem` (classes ! c)
-                           && matchContext classes cs ds
-             | otherwise = c == d
-                           && matchContext classes cs ds
+             | isPhonemeClass c  = member c classes
+                                   && d `elem` (classes ! c)
+                                   && matchContext classes cs ds
+             | otherwise         = c == d
+                                   && matchContext classes cs ds
 matchContext _       []     [] = True
 matchContext _       []     _  = False
 matchContext _       _      [] = False
