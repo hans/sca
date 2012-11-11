@@ -79,7 +79,6 @@ isPhonemeClass = isUpper
 
 matchContext :: PhonemeClassMap -> Context -> String -> Bool
 matchContext classes (c:cs) (d:ds)
-             -- TODO: Fix once we find a proper isUpper check
              | isPhonemeClass c  = member c classes
                                    && d `elem` (classes ! c)
                                    && matchContext classes cs ds
