@@ -90,3 +90,6 @@ applyRule' b a r = case applyRule'' (b, a) r of
 
 applyRule :: String -> Rule -> String
 applyRule = applyRule' ""
+
+applyRules :: String -> [Rule] -> String
+applyRules = foldl applyRule
