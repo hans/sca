@@ -58,19 +58,38 @@ matchContext _      _      = False
 
 -- -- Rule application with context tracking
 
--- takeLast :: Int -> [a] -> [a]
--- takeLast n xs = drop (length xs - n) xs
+takeLast :: Int -> [a] -> [a]
+takeLast n xs = drop (length xs - n) xs
 
--- -- Context-free rule match. Innermost and simplest logic goes here.
--- matchRule :: PhonemeClassMap -> Rule -> Char -> Bool
+type SampleContext = (String, String)
 
--- -- A phoneme class rule should match when the given char is a phoneme
--- -- class label.
--- matchRule classes (PhonemeClassRule l _ _ _) c = c `elem` (classes ! l)
+applyRule'' :: SampleContext -> Rule -> Maybe (String, SampleContext)
 
--- -- A phoneme rule should match when the given char is equal to the
--- -- rule's match char.
--- matchRule _ (PhonemeRule l _ _ _) c = c == l
+applyRule'' (b, (i:a)) r
+    = if matchContext bc bt
+         && matchContext ic [i]
+         && matchContext ac at
+      then Just (replacement r, newSampleContext)
+      else Just ([i], newSampleContext)
+      where bc = beforeContext r
+            ic = inContext r
+            ac = afterContext r
+
+            -- Trim sample contexts to match length of rule's context
+            bt = takeLast (length bc) b
+            at = take (length ac) a
+
+            newSampleContext = (b ++ [i], a)
+
+applyRule'' (_, []) r = Nothing
+
+applyRule' :: String -> String -> Rule -> String
+applyRule' b a r = case applyRule'' (b, a) r of
+                      Just (x, (y, z)) -> x ++ applyRule' y z r
+                      Nothing          -> []
+
+applyRule :: String -> Rule -> String
+applyRule = applyRule' ""
 
 -- -- Context-aware rule application. Delegates primary rule logic
 -- -- (context-free) to `matchRule` and context matching to `matchContext`.
