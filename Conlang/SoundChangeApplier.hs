@@ -37,13 +37,22 @@ isPhonemeClass = isUpper
 isPhoneme :: Char -> Bool
 isPhoneme = isLetter
 
-parseContext :: PhonemeClassMap -> String -> Maybe (ContextElement, String)
+type ContextParser = String -> [(ContextElement, String)]
+
+parseContext :: PhonemeClassMap -> ContextParser
 parseContext m (c:s) | isPhonemeClass c
-                       = Just ((PhonemeClassContext c (m ! c)), s)
+                       = [((PhonemeClassContext c (m ! c)), s)]
                      | isPhoneme c
-                       = Just ((PhonemeContext c), s)
+                       = [((PhonemeContext c), s)]
                      | otherwise
-                       = Nothing
+                       = []
+parseContext _ ""      = []
+
+bindParser :: [(ContextElement, String)]
+              -> ContextParser
+              -> [(ContextElement, String)]
+bindParser xs f = xs ++ f s
+                  where (_, s) = last xs
 
 -- Context-free rule match - this is the core logic!
 matchContextElement :: ContextElement -> Char -> Bool
