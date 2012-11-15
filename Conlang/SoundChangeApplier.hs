@@ -56,16 +56,16 @@ matchContext (c:cs) (s:ss) = matchContextElement c s
 matchContext []     []     = True
 matchContext _      _      = False
 
--- -- Rule application with context tracking
+-- Rule application with context tracking
 
 takeLast :: Int -> [a] -> [a]
 takeLast n xs = drop (length xs - n) xs
 
 type SampleContext = (String, String)
 
-applyRule'' :: SampleContext -> Rule -> Maybe (String, SampleContext)
+applyRule' :: SampleContext -> Rule -> Maybe (String, SampleContext)
 
-applyRule'' (b, (i:a)) r
+applyRule' (b, (i:a)) r
     = if matchContext bc bt
          && matchContext ic [i]
          && matchContext ac at
@@ -81,15 +81,12 @@ applyRule'' (b, (i:a)) r
 
             newSampleContext = (b ++ [i], a)
 
-applyRule'' (_, []) r = Nothing
+applyRule' (_, []) r = Nothing
 
-applyRule' :: String -> String -> Rule -> String
-applyRule' b a r = case applyRule'' (b, a) r of
-                      Just (x, (y, z)) -> x ++ applyRule' y z r
+applyRule :: String -> String -> Rule -> String
+applyRule b a r = case applyRule' (b, a) r of
+                      Just (x, (y, z)) -> x ++ applyRule y z r
                       Nothing          -> []
 
-applyRule :: String -> Rule -> String
-applyRule = applyRule' ""
-
 applyRules :: String -> [Rule] -> String
-applyRules = foldl applyRule
+applyRules = foldl (applyRule "")
