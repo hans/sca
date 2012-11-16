@@ -37,22 +37,38 @@ isPhonemeClass = isUpper
 isPhoneme :: Char -> Bool
 isPhoneme = isLetter
 
-type ContextParser = String -> [(ContextElement, String)]
-
-parseContext :: PhonemeClassMap -> ContextParser
+parseContext :: PhonemeClassMap -> String -> Maybe (ContextElement, String)
 parseContext m (c:s) | isPhonemeClass c
-                       = [((PhonemeClassContext c (m ! c)), s)]
+                       = Just ((PhonemeClassContext c (m ! c)), s)
                      | isPhoneme c
-                       = [((PhonemeContext c), s)]
+                       = Just ((PhonemeContext c), s)
                      | otherwise
-                       = []
-parseContext _ ""      = []
+                       = Nothing
+parseContext _ ""      = Nothing
 
-bindParser :: [(ContextElement, String)]
-              -> ContextParser
-              -> [(ContextElement, String)]
-bindParser xs f = xs ++ f s
-                  where (_, s) = last xs
+-- Accepts a previous context and a function for continuing with such a
+-- after-context as contained within the context, and returns a new
+-- context (context context context)
+bindParser :: Maybe (ContextElement, String)
+              -> (String -> Maybe (ContextElement, String))
+              -> Maybe (ContextElement, String)
+
+bindParser Nothing       _ = Nothing
+bindParser (Just (_, s)) f = f s
+
+-- Predicate: Is the Maybe a Just?
+matchJust :: Maybe a -> Bool
+matchJust (Just _) = True
+matchJust Nothing  = False
+
+pullContextElement :: Maybe (ContextElement, String) -> ContextElement
+pullContextElement (Just (c, _)) = c
+
+doParse :: PhonemeClassMap -> String -> [ContextElement]
+doParse m s = map pullContextElement
+                  (takeWhile matchJust (iterate (flip bindParser p)
+                                                (p s)))
+              where p = parseContext m
 
 -- Context-free rule match - this is the core logic!
 matchContextElement :: ContextElement -> Char -> Bool
