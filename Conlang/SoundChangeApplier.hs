@@ -37,14 +37,14 @@ isPhonemeClass = isUpper
 isPhoneme :: Char -> Bool
 isPhoneme = isLetter
 
-parseContext :: PhonemeClassMap -> String -> Maybe (ContextElement, String)
-parseContext m (c:s) | isPhonemeClass c
-                       = Just ((PhonemeClassContext c (m ! c)), s)
-                     | isPhoneme c
-                       = Just ((PhonemeContext c), s)
-                     | otherwise
-                       = Nothing
-parseContext _ ""      = Nothing
+parseContextElement :: PhonemeClassMap -> String -> Maybe (ContextElement, String)
+parseContextElement m (c:s) | isPhonemeClass c
+                              = Just ((PhonemeClassContext c (m ! c)), s)
+                            | isPhoneme c
+                              = Just ((PhonemeContext c), s)
+                            | otherwise
+                              = Nothing
+parseContextElement _ ""      = Nothing
 
 -- Accepts a previous context and a function for continuing with such a
 -- after-context as contained within the context, and returns a new
@@ -64,11 +64,11 @@ matchJust Nothing  = False
 pullContextElement :: Maybe (ContextElement, String) -> ContextElement
 pullContextElement (Just (c, _)) = c
 
-doParse :: PhonemeClassMap -> String -> [ContextElement]
-doParse m s = map pullContextElement
-                  (takeWhile matchJust (iterate (flip bindParser p)
+parseContext :: PhonemeClassMap -> String -> [ContextElement]
+parseContext m s = map pullContextElement
+                       (takeWhile matchJust (iterate (flip bindParser p)
                                                 (p s)))
-              where p = parseContext m
+                   where p = parseContextElement m
 
 -- Context-free rule match - this is the core logic!
 matchContextElement :: ContextElement -> Char -> Bool
