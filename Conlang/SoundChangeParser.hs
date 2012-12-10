@@ -1,5 +1,6 @@
 module SoundChangeParser where
 
+import Control.Monad
 import Text.ParserCombinators.Parsec
 
 type Phoneme = Char
@@ -25,9 +26,7 @@ context :: CharParser () Context
 context = many1 (classContext <|> phonemeContext)
 
 classContext :: CharParser () ContextElement
-classContext = do
-    char <- upper
-    return $ PhonemeClassContext char ""
+classContext = liftM (\c -> PhonemeClassContext c "") upper
 
 phonemeContext :: CharParser () ContextElement
 phonemeContext = do
