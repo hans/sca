@@ -5,7 +5,7 @@ import Text.ParserCombinators.Parsec
 
 type Phoneme = Char
 
-data ContextElement = PhonemeClassContext Char [Phoneme]
+data ContextElement = PhonemeClassContext Char
                     | PhonemeContext Phoneme
 
 type Context = [ContextElement]
@@ -16,7 +16,7 @@ data Rule = Rule { replacement   :: [Phoneme],
                    afterContext  :: Context }
 
 instance Show ContextElement where
-    show (PhonemeClassContext c _) = [c]
+    show (PhonemeClassContext c) = [c]
     show (PhonemeContext c) = [c]
 
 instance Show Rule where
@@ -26,12 +26,10 @@ context :: CharParser () Context
 context = many1 (classContext <|> phonemeContext)
 
 classContext :: CharParser () ContextElement
-classContext = liftM (\c -> PhonemeClassContext c "") upper
+classContext = liftM PhonemeClassContext upper
 
 phonemeContext :: CharParser () ContextElement
-phonemeContext = do
-    char <- lower
-    return $ PhonemeContext char
+phonemeContext = liftM PhonemeContext lower
 
 rule :: CharParser () Rule
 rule = do
