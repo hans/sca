@@ -1,7 +1,7 @@
 module SoundChangeParser where
 
 import Control.Monad
-import Text.ParserCombinators.Parsec
+import Text.Parsec
 
 type Phoneme = Char
 
@@ -22,16 +22,16 @@ instance Show ContextElement where
 instance Show Rule where
     show (Rule r b i a) = show i ++ " > " ++ r ++ " / " ++ show b ++ "_" ++ show a
 
-context :: CharParser () Context
+context :: Parsec String () Context
 context = many1 (classContext <|> phonemeContext)
 
-classContext :: CharParser () ContextElement
+classContext :: Parsec String () ContextElement
 classContext = liftM PhonemeClassContext upper
 
-phonemeContext :: CharParser () ContextElement
+phonemeContext :: Parsec String () ContextElement
 phonemeContext = liftM PhonemeContext lower
 
-rule :: CharParser () Rule
+rule :: Parsec String () Rule
 rule = do
     spaces
     inContext <- context
