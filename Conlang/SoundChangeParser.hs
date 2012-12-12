@@ -1,13 +1,14 @@
 module SoundChangeParser where
 
 import Control.Monad
+import Data.Map ((!), empty, insert, Map)
 import Text.Parsec
+import Text.Parsec.String (Parser)
 
 type Phoneme = Char
+type PhonemeClassMap = Map Char [Phoneme]
 
-data ContextElement = PhonemeClassContext Char
-                    | PhonemeContext Phoneme
-
+type ContextElement = Parser Phoneme
 type Context = [ContextElement]
 
 data Rule = Rule { replacement   :: [Phoneme],
@@ -15,23 +16,30 @@ data Rule = Rule { replacement   :: [Phoneme],
                    inContext     :: Context,
                    afterContext  :: Context }
 
-instance Show ContextElement where
-    show (PhonemeClassContext c) = [c]
-    show (PhonemeContext c) = [c]
-
+-- TODO
 instance Show Rule where
-    show (Rule r b i a) = show i ++ " > " ++ r ++ " / " ++ show b ++ "_" ++ show a
+    show (Rule r b i a) = show r
 
-context :: Parsec String () Context
+phonemeClassDefinition :: Parsec String PhonemeClassMap ()
+phonemeClassDefinition = do
+    c <- upper
+    string ":" >> spaces
+    ps <- many1 lower
+    modifyState (insert c ps)
+
+context :: Parsec String PhonemeClassMap Context
 context = many1 (classContext <|> phonemeContext)
 
-classContext :: Parsec String () ContextElement
-classContext = liftM PhonemeClassContext upper
+classContext :: Parsec String PhonemeClassMap ContextElement
+classContext = do
+    c <- upper
+    m <- getState
+    return $ oneOf (m ! c)
 
-phonemeContext :: Parsec String () ContextElement
-phonemeContext = liftM PhonemeContext lower
+phonemeContext :: Parsec String PhonemeClassMap ContextElement
+phonemeContext = liftM char lower
 
-rule :: Parsec String () Rule
+rule :: Parsec String PhonemeClassMap Rule
 rule = do
     spaces
     inContext <- context
@@ -44,7 +52,9 @@ rule = do
 
     return $ Rule replacement beforeContext inContext afterContext
 
+file :: Parsec String PhonemeClassMap [Rule]
+file = many phonemeClassDefinition >> many rule
 
 main :: IO ()
 main = do
-       print $ parse rule "" "r > l / V_V"
+    print $ runParser file empty "" "V: aeiou\nr > l / V_V\ns > r / V_V"
