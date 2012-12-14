@@ -21,20 +21,15 @@ instance Show Rule where
     show (Rule r b i a) = show r
 
 phonemeClassDefinition :: Parsec String PhonemeClassMap ()
-phonemeClassDefinition = do
-    c <- upper
-    string ":" >> spaces
-    ps <- many1 lower
-    modifyState (insert c ps)
+phonemeClassDefinition = modifyState =<< modifier
+                         where modifier = liftM2 insert upper defn
+                               defn     = char ':' >> spaces >> many1 lower
 
 context :: Parsec String PhonemeClassMap Context
 context = many1 (classContext <|> phonemeContext)
 
 classContext :: Parsec String PhonemeClassMap ContextElement
-classContext = do
-    c <- upper
-    m <- getState
-    return $ oneOf (m ! c)
+classContext = liftM oneOf $ liftM2 (!) getState upper
 
 phonemeContext :: Parsec String PhonemeClassMap ContextElement
 phonemeContext = liftM char lower
@@ -57,4 +52,6 @@ file = many phonemeClassDefinition >> many rule
 
 main :: IO ()
 main = do
-    print $ runParser file empty "" "V: aeiou\nr > l / V_V\ns > r / V_V"
+    case runParser file empty "" "V: aeiou\nr > l / V_V\ns > r / V_V" of
+         (Right (r:rs)) -> print $ parse (head (beforeContext r)) "" "aro"
+         _ -> print ":("
