@@ -61,3 +61,9 @@ main = do
     case runParser file empty "" "V: aeiou\nr > l / V_V\ns > r / V_V" of
          (Right (r:rs)) -> print $ parse (head (beforeContext r)) "" "aro"
          _ -> print ":("
+
+-- Rule matching
+matchContext :: Context -> String -> Bool
+matchContext c s = case parse (sequence c) "" s of
+                        (Left _) -> False
+                        (Right _) -> True
