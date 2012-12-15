@@ -36,14 +36,10 @@ phonemeContext = liftM char lower
 
 rule :: Parsec String PhonemeClassMap Rule
 rule = do
-    spaces
-    inContext <- context
-    spaces >> char '>' >> spaces
-    replacement <- many1 $ noneOf " "
-    spaces >> char '/' >> spaces
-    beforeContext <- context
-    char '_'
-    afterContext <- context
+    inContext <- spaces >> context
+    replacement <- spaces >> char '>' >> spaces >> (many1 $ noneOf " ")
+    beforeContext <- spaces >> char '/' >> spaces >> context
+    afterContext <- char '_' >> context
 
     return $ Rule replacement beforeContext inContext afterContext
 
