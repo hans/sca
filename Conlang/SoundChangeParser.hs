@@ -41,7 +41,10 @@ context :: Parsec String PhonemeClassMap Context
 context = many1 (classContext <|> phonemeContext)
 
 classContext :: Parsec String PhonemeClassMap ContextElement
-classContext = liftM oneOf $ liftM2 (!) getState upper
+classContext = liftM oneOf $ liftM2 (!) getState anyPhonemeClass
+
+anyPhonemeClass :: Parsec String PhonemeClassMap Char
+anyPhonemeClass = upper
 
 phonemeContext :: Parsec String PhonemeClassMap ContextElement
 phonemeContext = liftM char anyPhoneme
