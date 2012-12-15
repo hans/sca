@@ -1,6 +1,6 @@
 module SoundChangeParser where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative ((<$>), (<*>), (<*), (*>))
 import Control.Monad
 import Data.Map ((!), empty, insert, Map)
 import Text.Parsec
@@ -27,16 +27,19 @@ file = many phonemeClassDefinition >> many rule
 phonemeClassDefinition :: Parsec String PhonemeClassMap ()
 phonemeClassDefinition = modifyState =<< modifier
                          where modifier = insert <$> upper <*> defn
-                               defn     = char ':' >> spaces >> many1 lower
+                               defn     = spacedChar ':' >> many1 lower
 
 rule :: Parsec String PhonemeClassMap Rule
 rule = do
     inContext <- spaces >> context
-    replacement <- spaces >> char '>' >> spaces >> (many1 $ noneOf " ")
-    beforeContext <- spaces >> char '/' >> spaces >> context
+    replacement <- spacedChar '>' >> (many1 $ noneOf " ")
+    beforeContext <- spacedChar '/' >> context
     afterContext <- char '_' >> context
 
     return $ Rule replacement beforeContext inContext afterContext
+
+spacedChar :: Char -> Parsec String PhonemeClassMap Char
+spacedChar c = spaces *> char c <* spaces
 
 context :: Parsec String PhonemeClassMap Context
 context = many1 (classContext <|> phonemeContext)
