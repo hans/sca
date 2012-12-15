@@ -65,7 +65,8 @@ main = do
 ------------
 
 matchRule :: Rule -> String -> Bool
-matchRule (Rule r b i a) s = let allParsers = sequence (concat [b, i, a])
-                             in case parse allParsers "" s of
-                                     (Left _) -> False
-                                     (Right _) -> True
+matchRule rule@(Rule r b i a) s@(c:cs) = let allParsers = sequence (concat [b, i, a])
+                                         in case parse allParsers "" s of
+                                                 (Left _) -> matchRule rule cs
+                                                 (Right _) -> True
+matchRule _                   "" = False
