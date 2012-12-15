@@ -62,8 +62,10 @@ main = do
          (Right (r:rs)) -> print $ parse (head (beforeContext r)) "" "aro"
          _ -> print ":("
 
--- Rule matching
-matchContext :: Context -> String -> Bool
-matchContext c s = case parse (sequence c) "" s of
-                        (Left _) -> False
-                        (Right _) -> True
+------------
+
+matchRule :: Rule -> String -> Bool
+matchRule (Rule r b i a) s = let allParsers = sequence (concat [b, i, a])
+                             in case parse allParsers "" s of
+                                     (Left _) -> False
+                                     (Right _) -> True
